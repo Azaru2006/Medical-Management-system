@@ -1,275 +1,144 @@
 import React from "react";
-import { BrowserRouter as Router, Routes, Route, Link, useLocation, Navigate } from "react-router-dom";
-import "./index.css";
-
+import { BrowserRouter as Router, Routes, Route, NavLink, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./context/AuthContext";
-import ProtectedRoute   from "./components/ProtectedRoute";
-import Login            from "./components/Login";
-import Register         from "./components/Register";
-import Dashboard        from "./components/Dashboard";
-import DoctorForm       from "./components/DoctorForm";
-import DoctorList       from "./components/DoctorList";
-import PatientForm      from "./components/PatientForm";
-import AppointmentForm  from "./components/AppointmentForm";
-import MedicineForm     from "./components/MedicineForm";
-import LabTestForm      from "./components/LabTestForm";
-import TestReportForm   from "./components/TestReportForm";
-import TestReportList   from "./components/TestReportList";
+
+import Login          from "./components/Login";
+import Register       from "./components/Register";
+import ProtectedRoute from "./components/ProtectedRoute";
+import Dashboard      from "./components/Dashboard";
+import DoctorForm     from "./components/DoctorForm";
+import DoctorList     from "./components/DoctorList";
+import PatientForm    from "./components/PatientForm";
+import PatientHistory from "./components/PatientHistory";
+import AppointmentForm from "./components/AppointmentForm";
 import PrescriptionForm from "./components/PrescriptionForm";
 import PrescriptionList from "./components/PrescriptionList";
-import PatientHistory   from "./components/PatientHistory";
-import PatientEMR       from "./components/PatientEMR";
+import TestReportForm  from "./components/TestReportForm";
+import TestReportList  from "./components/TestReportList";
+import MedicineForm    from "./components/MedicineForm";
+import LabTestForm     from "./components/LabTestForm";
+import Billing         from "./components/Billing";
 
-const navItems = [
-  { to: "/",              icon: "🏠", label: "Dashboard",       roles: ["admin","doctor","receptionist"] },
-  { to: "/doctors",       icon: "👨‍⚕️", label: "Doctors",         roles: ["admin"] },
-  { to: "/patients",      icon: "🧑‍🤝‍🧑", label: "Patients",        roles: ["admin","doctor","receptionist"] },
-  { to: "/appointments",  icon: "🗓",  label: "Appointments",    roles: ["admin","doctor","receptionist"] },
-  { to: "/medicines",     icon: "💊",  label: "Medicines",       roles: ["admin","receptionist"] },
-  { to: "/labtests",      icon: "🔬",  label: "Lab Tests",       roles: ["admin","receptionist"] },
-  { to: "/reports",       icon: "🧪",  label: "Test Reports",    roles: ["admin","doctor"] },
-  { to: "/prescriptions", icon: "📋",  label: "Prescriptions",   roles: ["admin","doctor"] },
-  { to: "/history",       icon: "📁",  label: "Patient History", roles: ["admin","doctor"] },
+const NAV = [
+  { to: "/",             label: "📊 Dashboard",       roles: ["admin","doctor","receptionist"] },
+  { to: "/doctors",      label: "👨‍⚕️ Doctors",         roles: ["admin"] },
+  { to: "/patients",     label: "🧑‍🤝‍🧑 Patients",        roles: ["admin","doctor","receptionist"] },
+  { to: "/appointments", label: "📅 Appointments",    roles: ["admin","doctor","receptionist"] },
+  { to: "/prescriptions",label: "💊 Prescriptions",   roles: ["admin","doctor"] },
+  { to: "/reports",      label: "🧪 Test Reports",    roles: ["admin","doctor"] },
+  { to: "/billing",      label: "🧾 Billing",          roles: ["admin","receptionist"] },
+  { to: "/medicines",    label: "💉 Medicines",        roles: ["admin","receptionist"] },
+  { to: "/labtests",     label: "🔬 Lab Tests",        roles: ["admin","receptionist"] },
+  { to: "/history",      label: "📋 Patient History",  roles: ["admin","doctor"] },
 ];
 
-const roleBadge = {
-  admin:        { background: "#1d6fa4", color: "#fff" },
-  doctor:       { background: "#0d9373", color: "#fff" },
-  receptionist: { background: "#d97706", color: "#fff" },
-};
-
-function Sidebar() {
-  const location         = useLocation();
+function AppLayout() {
   const { user, logout } = useAuth();
 
+  const roleColor = { admin: "#f59e0b", doctor: "#22c55e", receptionist: "#60a5fa" };
+
   return (
-    <aside style={{
-      width: "240px",
-      height: "100vh",
-      background: "#0f2744",
-      display: "flex",
-      flexDirection: "column",
-      position: "fixed",
-      top: 0,
-      left: 0,
-      zIndex: 100,
-      boxShadow: "4px 0 24px rgba(15,39,68,0.18)",
-      overflowY: "auto"
-    }}>
-
-      {/* TOP: LOGO + NAV */}
-      <div style={{ flex: 1 }}>
-
-        {/* LOGO */}
-        <div style={{
-          padding: "28px 24px 20px",
-          borderBottom: "1px solid rgba(255,255,255,0.08)"
-        }}>
-          <div style={{ fontSize: 28, marginBottom: 6 }}>🏥</div>
-          <h1 style={{
-            fontFamily: "'Lora', serif",
-            fontSize: 19, color: "#fff",
-            margin: 0, fontWeight: 700
-          }}>City Hospital</h1>
-          <span style={{
-            fontSize: 11, color: "#00b4d8",
-            fontWeight: 500, letterSpacing: "1.5px",
-            textTransform: "uppercase"
-          }}>Management System</span>
-        </div>
-
-        {/* NAV LINKS */}
-        <nav style={{ padding: "16px 12px" }}>
-          <div style={{
-            fontSize: 10, fontWeight: 700,
-            letterSpacing: "1.8px", textTransform: "uppercase",
-            color: "rgba(255,255,255,0.3)",
-            padding: "14px 12px 6px"
-          }}>
-            Main Menu
-          </div>
-
-          {navItems
-            .filter(item => item.roles.includes(user?.role))
-            .map(item => (
-              <Link
-                key={item.to}
-                to={item.to}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 11,
-                  padding: "11px 14px",
-                  borderRadius: 8,
-                  color: location.pathname === item.to ? "#fff" : "rgba(255,255,255,0.65)",
-                  textDecoration: "none",
-                  fontSize: 14,
-                  fontWeight: 500,
-                  marginBottom: 2,
-                  background: location.pathname === item.to ? "#1d6fa4" : "transparent",
-                  boxShadow: location.pathname === item.to ? "0 2px 8px rgba(29,111,164,0.35)" : "none",
-                  transition: "all 0.18s"
-                }}
-              >
-                <span style={{ fontSize: 17, width: 22, textAlign: "center" }}>{item.icon}</span>
-                {item.label}
-              </Link>
-            ))
-          }
-        </nav>
-      </div>
-
-      {/* BOTTOM: USER PROFILE + LOGOUT */}
-      <div style={{
-        padding: "16px 20px",
-        borderTop: "1px solid rgba(255,255,255,0.08)"
+    <div style={{ display: "flex", minHeight: "100vh", background: "#f1f5f9" }}>
+      {/* ── SIDEBAR ── */}
+      <aside style={{
+        width: 240, background: "#0f2744", display: "flex",
+        flexDirection: "column", position: "fixed", top: 0, left: 0,
+        height: "100vh", zIndex: 100, overflowY: "auto"
       }}>
-        {/* User info */}
-        <div style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 10,
-          marginBottom: 12
-        }}>
-          <div style={{
-            width: 36, height: 36,
-            borderRadius: "50%",
-            background: "rgba(255,255,255,0.12)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            fontSize: 16,
-            flexShrink: 0
-          }}>
-            {user?.role === "admin" ? "🛡️" : user?.role === "doctor" ? "👨‍⚕️" : "🗂️"}
-          </div>
-          <div style={{ overflow: "hidden", flex: 1 }}>
-            <div style={{
-              color: "#fff",
-              fontSize: 13,
-              fontWeight: 600,
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-              whiteSpace: "nowrap"
-            }}>
-              {user?.name}
-            </div>
-            <span style={{
-              fontSize: 10,
-              fontWeight: 700,
-              padding: "2px 8px",
-              borderRadius: 999,
-              textTransform: "uppercase",
-              letterSpacing: "0.5px",
-              ...roleBadge[user?.role]
-            }}>
-              {user?.role}
-            </span>
-          </div>
+        {/* Logo */}
+        <div style={{ padding: "24px 20px 16px", borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
+          <div style={{ fontSize: 22, fontWeight: 800, color: "#fff", letterSpacing: -0.5 }}>🏥 City Hospital</div>
+          <div style={{ fontSize: 11, color: "rgba(255,255,255,0.45)", marginTop: 2 }}>Medical Management System</div>
         </div>
 
-        {/* Logout button */}
-        <button
-          onClick={logout}
-          style={{
-            width: "100%",
-            padding: "9px",
-            border: "1px solid rgba(255,255,255,0.15)",
-            borderRadius: 8,
-            background: "rgba(255,255,255,0.06)",
-            color: "rgba(255,255,255,0.8)",
-            fontSize: 13,
-            fontWeight: 600,
-            cursor: "pointer",
-            fontFamily: "'DM Sans', sans-serif",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: 8
-          }}
-          onMouseOver={e => e.currentTarget.style.background = "rgba(220,38,38,0.35)"}
-          onMouseOut={e  => e.currentTarget.style.background = "rgba(255,255,255,0.06)"}
-        >
-          🚪 Sign Out
-        </button>
-      </div>
+        {/* Nav */}
+        <div style={{ flex: 1, padding: "12px 0" }}>
+          {NAV.filter(n => user && n.roles.includes(user.role)).map(n => (
+            <NavLink key={n.to} to={n.to} end={n.to === "/"}
+              style={({ isActive }) => ({
+                display: "block", padding: "10px 20px", textDecoration: "none",
+                fontSize: 13, fontWeight: 600, borderRadius: "0 8px 8px 0", margin: "2px 10px 2px 0",
+                color:      isActive ? "#fff" : "rgba(255,255,255,0.6)",
+                background: isActive ? "rgba(29,111,164,0.9)" : "transparent",
+                borderLeft: isActive ? "3px solid #00b4d8" : "3px solid transparent",
+                transition: "all 0.15s"
+              })}>
+              {n.label}
+            </NavLink>
+          ))}
+        </div>
 
-    </aside>
-  );
-}
+        {/* User + Logout */}
+        {user && (
+          <div style={{ padding: "16px 20px", borderTop: "1px solid rgba(255,255,255,0.08)" }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: "#fff", marginBottom: 2 }}>{user.name}</div>
+            <div style={{
+              display: "inline-block", padding: "2px 10px", borderRadius: 20, fontSize: 11, fontWeight: 700,
+              marginBottom: 12,
+              background: (roleColor[user.role] || "#60a5fa") + "30",
+              color: roleColor[user.role] || "#60a5fa"
+            }}>{user.role}</div>
+            <button onClick={logout} style={{
+              width: "100%", padding: "8px", background: "rgba(239,68,68,0.15)",
+              color: "#fca5a5", border: "1px solid rgba(239,68,68,0.3)",
+              borderRadius: 8, cursor: "pointer", fontSize: 13, fontWeight: 600
+            }}>🚪 Sign Out</button>
+          </div>
+        )}
+      </aside>
 
-function AppLayout() {
-  const { user } = useAuth();
-
-  if (!user) {
-    return (
-      <Routes>
-        <Route path="/login"    element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="*"         element={<Navigate to="/login" replace />} />
-      </Routes>
-    );
-  }
-
-  return (
-    <div className="app-shell">
-      <Sidebar />
-      <main className="main-content">
+      {/* ── MAIN ── */}
+      <main style={{ marginLeft: 240, flex: 1, padding: 32, minHeight: "100vh" }}>
         <Routes>
           <Route path="/" element={
             <ProtectedRoute><Dashboard /></ProtectedRoute>
-          } />
+          }/>
           <Route path="/doctors" element={
             <ProtectedRoute roles={["admin"]}>
-              <DoctorForm />
-              <DoctorList />
+              <DoctorForm /><DoctorList />
             </ProtectedRoute>
-          } />
+          }/>
           <Route path="/patients" element={
             <ProtectedRoute roles={["admin","doctor","receptionist"]}>
               <PatientForm />
             </ProtectedRoute>
-          } />
+          }/>
           <Route path="/appointments" element={
             <ProtectedRoute roles={["admin","doctor","receptionist"]}>
               <AppointmentForm />
             </ProtectedRoute>
-          } />
+          }/>
+          <Route path="/prescriptions" element={
+            <ProtectedRoute roles={["admin","doctor"]}>
+              <PrescriptionForm /><PrescriptionList />
+            </ProtectedRoute>
+          }/>
+          <Route path="/reports" element={
+            <ProtectedRoute roles={["admin","doctor"]}>
+              <TestReportForm /><TestReportList />
+            </ProtectedRoute>
+          }/>
+          <Route path="/billing" element={
+            <ProtectedRoute roles={["admin","receptionist"]}>
+              <Billing />
+            </ProtectedRoute>
+          }/>
           <Route path="/medicines" element={
             <ProtectedRoute roles={["admin","receptionist"]}>
               <MedicineForm />
             </ProtectedRoute>
-          } />
+          }/>
           <Route path="/labtests" element={
             <ProtectedRoute roles={["admin","receptionist"]}>
               <LabTestForm />
             </ProtectedRoute>
-          } />
-          <Route path="/reports" element={
-            <ProtectedRoute roles={["admin","doctor"]}>
-              <TestReportForm />
-              <TestReportList />
-            </ProtectedRoute>
-          } />
-          <Route path="/prescriptions" element={
-            <ProtectedRoute roles={["admin","doctor"]}>
-              <PrescriptionForm />
-              <PrescriptionList />
-            </ProtectedRoute>
-          } />
+          }/>
           <Route path="/history" element={
             <ProtectedRoute roles={["admin","doctor"]}>
               <PatientHistory />
             </ProtectedRoute>
-          } />
-          <Route path="/emr/:id" element={
-            <ProtectedRoute roles={["admin","doctor"]}>
-              <PatientEMR />
-            </ProtectedRoute>
-          } />
-          <Route path="/login"    element={<Navigate to="/" replace />} />
-          <Route path="/register" element={<Navigate to="/" replace />} />
-          <Route path="*"         element={<Navigate to="/" replace />} />
+          }/>
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>
     </div>
@@ -280,7 +149,11 @@ export default function App() {
   return (
     <AuthProvider>
       <Router>
-        <AppLayout />
+        <Routes>
+          <Route path="/login"    element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/*"        element={<AppLayout />} />
+        </Routes>
       </Router>
     </AuthProvider>
   );

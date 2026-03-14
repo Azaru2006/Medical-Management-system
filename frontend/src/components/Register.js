@@ -1,241 +1,204 @@
 import React, { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
 import axios from "axios";
+import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import SPECIALIZATIONS from "../constants/specializations";
 
-const specializations = [
-  "General Physician",
-  "Cardiologist",
-  "Dermatologist",
-  "ENT Specialist",
-  "Gastroenterologist",
-  "Gynecologist",
-  "Neurologist",
-  "Oncologist",
-  "Ophthalmologist",
-  "Orthopedic Surgeon",
-  "Pediatrician",
-  "Psychiatrist",
-  "Pulmonologist",
-  "Radiologist",
-  "Urologist",
-  "Other"
-];
+const API = "http://localhost:5000/api";
 
 export default function Register() {
-  const { login }             = useAuth();
-  const navigate              = useNavigate();
-  const [form, setForm]       = useState({ name: "", email: "", password: "", confirmPassword: "", specialization: "" });
-  const [error, setError]     = useState("");
-  const [loading, setLoading] = useState(false);
-  const [showPass, setShow]   = useState(false);
+  const { login } = useAuth();
+  const navigate  = useNavigate();
 
-  const handleSubmit = async (e) => {
+  const [form, setForm]   = useState({
+    name: "", email: "", password: "", confirmPassword: "",
+    specialization: "", phone: ""
+  });
+  const [error,   setError]   = useState("");
+  const [loading, setLoading] = useState(false);
+  const [showPw,  setShowPw]  = useState(false);
+
+  const handleChange = e => setForm({ ...form, [e.target.name]: e.target.value });
+
+  const handleSubmit = async e => {
     e.preventDefault();
     setError("");
 
-    if (form.password !== form.confirmPassword) {
-      setError("Passwords do not match.");
-      return;
-    }
-    if (form.password.length < 6) {
-      setError("Password must be at least 6 characters.");
-      return;
-    }
-    if (!form.specialization) {
-      setError("Please select your specialization.");
-      return;
-    }
+    if (form.password !== form.confirmPassword)
+      return setError("Passwords do not match");
+    if (form.password.length < 6)
+      return setError("Password must be at least 6 characters");
 
     setLoading(true);
     try {
-      const res = await axios.post("http://localhost:5000/api/auth/register", {
+      const { data } = await axios.post(`${API}/auth/register`, {
         name:           form.name,
         email:          form.email,
         password:       form.password,
         role:           "doctor",
-        specialization: form.specialization
+        specialization: form.specialization,
+        phone:          form.phone
       });
-      login(res.data);
+      login(data);
       navigate("/");
     } catch (err) {
-      setError(err.response?.data?.message || "Registration failed. Please try again.");
+      setError(err.response?.data?.message || "Registration failed");
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
-  const labelStyle = {
-    display: "block", fontSize: 12, fontWeight: 700,
-    textTransform: "uppercase", letterSpacing: "0.6px",
-    color: "#3d5a80", marginBottom: 6
-  };
+  const pwMatch = form.confirmPassword && form.password === form.confirmPassword;
 
   return (
     <div style={{
-      minHeight: "100vh",
-      background: "linear-gradient(135deg, #0f2744 0%, #1a3a5c 50%, #1d6fa4 100%)",
-      display: "flex", alignItems: "center", justifyContent: "center",
-      padding: 24, fontFamily: "'DM Sans', sans-serif"
+      minHeight: "100vh", background: "linear-gradient(135deg, #0f2744 0%, #1d6fa4 100%)",
+      display: "flex", alignItems: "center", justifyContent: "center", padding: 20
     }}>
-      <div style={{ width: "100%", maxWidth: 460 }}>
+      <div style={{ width: "100%", maxWidth: 480 }}>
 
-        {/* LOGO */}
+        {/* Header */}
         <div style={{ textAlign: "center", marginBottom: 32 }}>
-          <div style={{ fontSize: 48, marginBottom: 10 }}>🏥</div>
-          <h1 style={{ fontFamily: "'Lora', serif", fontSize: 26, fontWeight: 700, color: "#fff", margin: 0 }}>
-            City Hospital
-          </h1>
-          <p style={{ color: "rgba(255,255,255,0.55)", fontSize: 14, marginTop: 6 }}>
-            Doctor Registration
-          </p>
+          <div style={{
+            width: 64, height: 64, borderRadius: "50%",
+            background: "rgba(255,255,255,0.15)", display: "flex",
+            alignItems: "center", justifyContent: "center",
+            fontSize: 28, margin: "0 auto 16px"
+          }}>🩺</div>
+          <h1 style={{ color: "#fff", fontSize: 28, fontWeight: 700, margin: 0 }}>Doctor Registration</h1>
+          <p style={{ color: "rgba(255,255,255,0.7)", marginTop: 6, fontSize: 14 }}>Create your doctor account</p>
         </div>
 
-        {/* CARD */}
-        <div style={{ background: "#fff", borderRadius: 16, padding: 36, boxShadow: "0 24px 64px rgba(0,0,0,0.25)" }}>
+        {/* Card */}
+        <div style={{ background: "#fff", borderRadius: 16, padding: 36, boxShadow: "0 20px 60px rgba(0,0,0,0.3)" }}>
 
-          {/* DOCTOR BADGE */}
-          <div style={{
-            display: "flex", alignItems: "center", gap: 14,
-            background: "#f0fdf4", border: "1.5px solid #bbf7d0",
-            borderRadius: 12, padding: "14px 18px", marginBottom: 24
-          }}>
-            <div style={{ fontSize: 36 }}>👨‍⚕️</div>
-            <div>
-              <div style={{ fontWeight: 700, fontSize: 15, color: "#14532d" }}>Doctor Account</div>
-              <div style={{ fontSize: 12, color: "#16a34a", marginTop: 2 }}>
-                Access prescriptions, test reports & patient history
-              </div>
-            </div>
-          </div>
-
-          <h2 style={{ fontFamily: "'Lora', serif", fontSize: 20, fontWeight: 700, color: "#0f2744", marginBottom: 20 }}>
-            Create your account
-          </h2>
-
-          {/* ERROR */}
           {error && (
             <div style={{
-              background: "#fee2e2", color: "#991b1b", border: "1px solid #fca5a5",
-              borderRadius: 8, padding: "10px 14px", fontSize: 14, marginBottom: 20, fontWeight: 500
-            }}>
-              ⚠️ {error}
-            </div>
+              background: "#fee2e2", color: "#991b1b", borderRadius: 8,
+              padding: "10px 14px", marginBottom: 20, fontSize: 14, fontWeight: 600
+            }}>❌ {error}</div>
           )}
 
           <form onSubmit={handleSubmit}>
 
-            {/* NAME */}
+            {/* Full Name */}
             <div style={{ marginBottom: 16 }}>
-              <label style={labelStyle}>Full Name</label>
+              <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#374151", marginBottom: 6 }}>
+                Full Name *
+              </label>
               <input
-                className="form-control"
-                placeholder="Dr. John Smith"
-                value={form.name}
-                onChange={e => setForm({ ...form, name: e.target.value })}
-                required
-                style={{ width: "100%" }}
+                name="name" className="form-control"
+                placeholder="Dr. Full Name"
+                value={form.name} onChange={handleChange} required
+                style={{ width: "100%", padding: "10px 12px", border: "1.5px solid #d1d5db", borderRadius: 8, fontSize: 14, boxSizing: "border-box" }}
               />
             </div>
 
-            {/* SPECIALIZATION */}
+            {/* Email */}
             <div style={{ marginBottom: 16 }}>
-              <label style={labelStyle}>Specialization</label>
+              <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#374151", marginBottom: 6 }}>
+                Email Address *
+              </label>
+              <input
+                name="email" type="email" className="form-control"
+                placeholder="doctor@hospital.com"
+                value={form.email} onChange={handleChange} required
+                style={{ width: "100%", padding: "10px 12px", border: "1.5px solid #d1d5db", borderRadius: 8, fontSize: 14, boxSizing: "border-box" }}
+              />
+            </div>
+
+            {/* Phone */}
+            <div style={{ marginBottom: 16 }}>
+              <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#374151", marginBottom: 6 }}>
+                Phone Number *
+              </label>
+              <input
+                name="phone" className="form-control"
+                placeholder="+91 99999 99999"
+                value={form.phone} onChange={handleChange} required
+                style={{ width: "100%", padding: "10px 12px", border: "1.5px solid #d1d5db", borderRadius: 8, fontSize: 14, boxSizing: "border-box" }}
+              />
+            </div>
+
+            {/* Specialization Dropdown */}
+            <div style={{ marginBottom: 16 }}>
+              <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#374151", marginBottom: 6 }}>
+                Specialization *
+              </label>
               <select
-                className="form-control"
-                value={form.specialization}
-                onChange={e => setForm({ ...form, specialization: e.target.value })}
-                required
-                style={{ width: "100%" }}
+                name="specialization"
+                value={form.specialization} onChange={handleChange} required
+                style={{
+                  width: "100%", padding: "10px 12px", border: "1.5px solid #d1d5db",
+                  borderRadius: 8, fontSize: 14, boxSizing: "border-box",
+                  background: "#fff", cursor: "pointer"
+                }}
               >
                 <option value="">— Select Specialization —</option>
-                {specializations.map(s => (
+                {SPECIALIZATIONS.map(s => (
                   <option key={s} value={s}>{s}</option>
                 ))}
               </select>
             </div>
 
-            {/* EMAIL */}
+            {/* Password */}
             <div style={{ marginBottom: 16 }}>
-              <label style={labelStyle}>Email Address</label>
-              <input
-                type="email" className="form-control"
-                placeholder="doctor@cityhospital.com"
-                value={form.email}
-                onChange={e => setForm({ ...form, email: e.target.value })}
-                required
-                style={{ width: "100%" }}
-              />
-            </div>
-
-            {/* PASSWORD */}
-            <div style={{ marginBottom: 16 }}>
-              <label style={labelStyle}>Password</label>
+              <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#374151", marginBottom: 6 }}>
+                Password *
+              </label>
               <div style={{ position: "relative" }}>
                 <input
-                  type={showPass ? "text" : "password"}
-                  className="form-control"
+                  name="password" type={showPw ? "text" : "password"} className="form-control"
                   placeholder="Min. 6 characters"
-                  value={form.password}
-                  onChange={e => setForm({ ...form, password: e.target.value })}
-                  required
-                  style={{ width: "100%", paddingRight: 44 }}
+                  value={form.password} onChange={handleChange} required
+                  style={{ width: "100%", padding: "10px 40px 10px 12px", border: "1.5px solid #d1d5db", borderRadius: 8, fontSize: 14, boxSizing: "border-box" }}
                 />
-                <button type="button" onClick={() => setShow(!showPass)} style={{
-                  position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)",
-                  background: "none", border: "none", cursor: "pointer", fontSize: 16, color: "#7a92ab"
-                }}>
-                  {showPass ? "🙈" : "👁️"}
+                <button type="button" onClick={() => setShowPw(!showPw)}
+                  style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", fontSize: 16 }}>
+                  {showPw ? "🙈" : "👁"}
                 </button>
               </div>
             </div>
 
-            {/* CONFIRM PASSWORD */}
+            {/* Confirm Password */}
             <div style={{ marginBottom: 24 }}>
-              <label style={labelStyle}>Confirm Password</label>
+              <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#374151", marginBottom: 6 }}>
+                Confirm Password *
+              </label>
               <input
-                type={showPass ? "text" : "password"}
-                className="form-control"
-                placeholder="Re-enter your password"
-                value={form.confirmPassword}
-                onChange={e => setForm({ ...form, confirmPassword: e.target.value })}
-                required
-                style={{ width: "100%" }}
+                name="confirmPassword" type="password" className="form-control"
+                placeholder="Re-enter password"
+                value={form.confirmPassword} onChange={handleChange} required
+                style={{
+                  width: "100%", padding: "10px 12px", boxSizing: "border-box",
+                  border: `1.5px solid ${form.confirmPassword ? (pwMatch ? "#22c55e" : "#ef4444") : "#d1d5db"}`,
+                  borderRadius: 8, fontSize: 14
+                }}
               />
               {form.confirmPassword && (
-                <div style={{ marginTop: 6, fontSize: 12, fontWeight: 600, color: form.password === form.confirmPassword ? "#15803d" : "#dc2626" }}>
-                  {form.password === form.confirmPassword ? "✅ Passwords match" : "❌ Passwords do not match"}
-                </div>
+                <p style={{ fontSize: 12, marginTop: 4, color: pwMatch ? "#16a34a" : "#dc2626" }}>
+                  {pwMatch ? "✓ Passwords match" : "✗ Passwords do not match"}
+                </p>
               )}
             </div>
 
-            <button type="submit" disabled={loading} style={{
-              width: "100%", padding: 12,
-              background: loading ? "#93c5fd" : "#1d6fa4",
-              color: "#fff", border: "none", borderRadius: 8,
-              fontSize: 15, fontWeight: 700,
-              cursor: loading ? "not-allowed" : "pointer",
-              fontFamily: "'DM Sans', sans-serif"
-            }}>
-              {loading ? "Creating account..." : "Register as Doctor →"}
+            <button type="submit" disabled={loading}
+              style={{
+                width: "100%", padding: "12px", background: loading ? "#9ca3af" : "#1d6fa4",
+                color: "#fff", border: "none", borderRadius: 8, fontSize: 15,
+                fontWeight: 700, cursor: loading ? "not-allowed" : "pointer"
+              }}>
+              {loading ? "Registering..." : "Register as Doctor"}
             </button>
           </form>
 
-          {/* LOGIN LINK */}
-          <div style={{
-            marginTop: 24, paddingTop: 20,
-            borderTop: "1px solid #f0f4f8",
-            textAlign: "center", fontSize: 14, color: "#7a92ab"
-          }}>
+          <p style={{ textAlign: "center", marginTop: 20, fontSize: 14, color: "#6b7280" }}>
             Already have an account?{" "}
-            <Link to="/login" style={{ color: "#1d6fa4", fontWeight: 700, textDecoration: "none" }}>
-              Sign in →
+            <Link to="/login" style={{ color: "#1d6fa4", fontWeight: 600, textDecoration: "none" }}>
+              Sign In
             </Link>
-          </div>
+          </p>
         </div>
-
-        <p style={{ textAlign: "center", color: "rgba(255,255,255,0.35)", fontSize: 12, marginTop: 20 }}>
-          © {new Date().getFullYear()} City Hospital Management System
-        </p>
       </div>
     </div>
   );
